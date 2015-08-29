@@ -14,9 +14,11 @@ type SelectArgs struct {
 	Parameters     []interface{} // Any parameters for the query
 }
 
-type Rowset []map[string]interface{}
+type Row map[string]interface{}
+type Rowset []Row
 
-//Run a Select statement in the database and return the result as a JSON string
+
+//Run a Select statement in the database and return the result
 func (s *SelectArgs) Select() (Rowset, error) {
 	conn, err := sql.Open(s.Driver, s.DataSourceName)
 	if err != nil {
@@ -30,11 +32,11 @@ func (s *SelectArgs) Select() (Rowset, error) {
 		return nil, err
 	}
 
-	return marshalRows(rows)
+	return getRows(rows)
 
 }
 
-func marshalRows(rows *sql.Rows) (Rowset, error) {
+func getRows(rows *sql.Rows) (Rowset, error) {
 	columns, err := rows.Columns()
 	if err != nil {
 		return nil, err
@@ -56,16 +58,17 @@ func marshalRows(rows *sql.Rows) (Rowset, error) {
 			panic("Something really weird happened and interface{} could not be converted to interface{}")
 		}
 
-		result = append(result, forceMarshalRow(columns, values))
+		result = append(result, getRow(columns, values))
 	}
 
 	return result, nil
 }
 
-//return JSON of row, plus trailing comma if not empty
-//ignores errors
-func forceMarshalRow(columns []string, row []interface{}) map[string]interface{} {
-	result := make(map[string]interface{}, len(columns))
+//return row, using assertions to trick the encoder into
+//figuring out the correct types for the fields
+// (see http://stackoverflow.com/questions/19991541/dumping-mysql-tables-to-json-with-golang)
+func getRow(columns []string, row []interface{}) Row {
+	result := make(Row, len(columns))
 
 	if len(columns) != len(row) {
 		return nil
