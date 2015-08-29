@@ -13,8 +13,7 @@ jsql --port 1234
 
 You now have the j-SQL server listening on port 1234:
 
-```
-go
+```go
 
 // client.go
 package main
