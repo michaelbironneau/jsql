@@ -64,8 +64,8 @@ func getRows(rows *sql.Rows) (Rowset, error) {
 	return result, nil
 }
 
-//return row, using assertions to trick the encoder into
-//figuring out the correct types for the fields
+//return row, using assertions to convert bytes into
+//strings since that is the only type the json encoder can't figure out
 // (see http://stackoverflow.com/questions/19991541/dumping-mysql-tables-to-json-with-golang)
 func getRow(columns []string, row []interface{}) Row {
 	result := make(Row, len(columns))
