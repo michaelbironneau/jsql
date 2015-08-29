@@ -1,22 +1,23 @@
 package main
 
 import (
-	_ "github.com/denisenkom/go-mssqldb"
-	_ "github.com/lib/pq"
-	_ "github.com/go-sql-driver/mysql"
 	"database/sql"
-	"encoding/json"
+	_ "github.com/denisenkom/go-mssqldb"
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 )
 
 type SelectArgs struct {
-	Driver         string
-	DataSourceName string
-	Statement      string
-	Parameters     []interface{}
+	Driver         string        //driver name, eg mssql
+	DataSourceName string        //datasource name (or connection string). see driver documentation
+	Statement      string        // SQL statement (only SELECT is supported for now)
+	Parameters     []interface{} // Any parameters for the query
 }
 
+type Rowset []map[string]interface{}
+
 //Run a Select statement in the database and return the result as a JSON string
-func (s *SelectArgs) Select() (*string, error) {
+func (s *SelectArgs) Select() (Rowset, error) {
 	conn, err := sql.Open(s.Driver, s.DataSourceName)
 	if err != nil {
 		return nil, err
@@ -33,13 +34,13 @@ func (s *SelectArgs) Select() (*string, error) {
 
 }
 
-func marshalRows(rows *sql.Rows) (*string, error) {
+func marshalRows(rows *sql.Rows) (Rowset, error) {
 	columns, err := rows.Columns()
 	if err != nil {
 		return nil, err
 	}
 
-	var result string
+	var result Rowset
 
 	values := make([]interface{}, len(columns))
 	valuesPtrs := make([]interface{}, len(columns))
@@ -55,23 +56,19 @@ func marshalRows(rows *sql.Rows) (*string, error) {
 			panic("Something really weird happened and interface{} could not be converted to interface{}")
 		}
 
-		result += forceMarshalRow(columns, values)
+		result = append(result, forceMarshalRow(columns, values))
 	}
 
-	if len(result) > 0 {
-		result = "[" + result[:len(result)-1] + "]" // remove trailing comma and make into JSON array
-	}
-
-	return &result, nil
+	return result, nil
 }
 
 //return JSON of row, plus trailing comma if not empty
 //ignores errors
-func forceMarshalRow(columns []string, row []interface{}) string {
+func forceMarshalRow(columns []string, row []interface{}) map[string]interface{} {
 	result := make(map[string]interface{}, len(columns))
 
 	if len(columns) != len(row) {
-		return ""
+		return nil
 	}
 
 	for i := range columns {
@@ -82,11 +79,5 @@ func forceMarshalRow(columns []string, row []interface{}) string {
 		}
 	}
 
-	jsonData, err := json.Marshal(result)
-
-	if err != nil {
-		return ""
-	}
-
-	return string(jsonData) + ","
+	return result
 }

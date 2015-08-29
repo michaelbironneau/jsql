@@ -1,20 +1,20 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"log"
 	"net"
 	"net/rpc"
 	"net/rpc/jsonrpc"
 	"strconv"
-	"encoding/json"
 )
 
-type jSQL int
+type JSQL int
 
 var port = flag.Int("port", 5123, "the port to listen on")
 
-func (s *jSQL) Select(arg *string, reply *string) error {
+func (s *JSQL) Select(arg *string, reply Rowset) error {
 	var (
 		err     error
 		selArgs SelectArgs
@@ -47,7 +47,7 @@ func main() {
 
 	log.Print("listening:", l.Addr())
 
-	jsql := new(jSQL)
+	jsql := new(JSQL)
 	rpc.Register(jsql)
 
 	for {
