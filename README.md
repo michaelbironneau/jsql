@@ -1,8 +1,11 @@
 # j-SQL
 
+**License**: MIT
+
 Experimental package to expose an SQL database through a JSON-RPC endpoint (for read-only access at the moment).
 
-**License**: MIT
+The only reason I made this is to access MSSQL data from a Cloud Foundry Python app without creating a custom buildpack. In particular, this means I can't install FreeTDS. As I want to use this with the Pandas package without modifying any of my existing code, the return type of the API is a top-level array, so that the `read_json` method will work with it out of the box. 
+
 
 ### Usage
 Use `go get github.com/michaelbironneau/jsql`, followed by `go install`. Then you can run
@@ -11,7 +14,7 @@ Use `go get github.com/michaelbironneau/jsql`, followed by `go install`. Then yo
 jsql --port 1234
 ```
 
-You now have the j-SQL server listening on port 1234:
+You now have a j-SQL daemon listening on port 1234:
 
 ```go
 
@@ -46,7 +49,7 @@ func main() {
 	c := jsonrpc.NewClient(client)
 	err = c.Call("JSQL.Select", args, &reply)
 	if err != nil {
-		log.Fatal("arith error:", err)
+		log.Fatal("error:", err)
 	}
 
 	fmt.Printf("Result: %v\n", reply[0]['Answer'])
@@ -62,8 +65,6 @@ Supports:
 * MS SQL
 * Postgres
 * MySQL
-
-The only reason I made this is to access MSSQL data from a Cloud Foundry Python app without creating a custom buildpack. In particular, this means I can't install FreeTDS. As I want to use this with the Pandas package without modifying any of my existing code, the return type of the API is a top-level array, so that the `read_json` method will work with it out of the box. 
 
 ## Python Client
 
