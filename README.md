@@ -14,6 +14,14 @@ Use `go get github.com/michaelbironneau/jsql`, followed by `go install`. Then yo
 jsql --port 1234
 ```
 
+#### Authentication
+
+You can optionally specify a password using the `--password` flag. 
+
+#### TLS
+
+You can optionally specify a server certificate and key file using the `--cert` and `--key` flags.
+
 You now have a j-SQL daemon listening on port 1234:
 
 ```go

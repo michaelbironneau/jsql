@@ -1,4 +1,4 @@
-package main
+package jsql
 
 import (
 	"database/sql"
@@ -8,15 +8,15 @@ import (
 )
 
 type SelectArgs struct {
-	Driver         string        //driver name, eg mssql
-	DataSourceName string        //datasource name (or connection string). see driver documentation
-	Statement      string        // SQL statement (only SELECT is supported for now)
-	Parameters     []interface{} // Any parameters for the query
+	Auth           string        `json:"auth"`            // secret string, if specified
+	Driver         string        `json:"driver"`          //driver name, eg mssql
+	DataSourceName string        `json:"datasource_name"` //datasource name (or connection string). see driver documentation
+	Statement      string        `json:"statement"`       // SQL statement (only SELECT is supported for now)
+	Parameters     []interface{} `json:"parameters"`      // Any parameters for the query
 }
 
 type Row map[string]interface{}
 type Rowset []Row
-
 
 //Run a Select statement in the database and return the result
 func (s *SelectArgs) Select() (Rowset, error) {

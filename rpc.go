@@ -1,7 +1,8 @@
-package main
+package jsql
 
 import (
-	"encoding/json"
+	"crypto/tls"
+	"errors"
 	"flag"
 	"log"
 	"net"
@@ -12,9 +13,15 @@ import (
 
 type JSQL int
 
-var port = flag.Int("port", 5123, "the port to listen on")
+var (
+	port       = flag.Int("port", 5123, "the port to listen on")
+	secret     = flag.String("password", "", "password to require from clients (optional)")
+	certFile   = flag.String("cert", "", "server certificate for TLS (optional)")
+	keyFile    = flag.String("key", "", "server private key for TLS (optional)")
+	skipVerify = flag.Bool("skip-verify", false, "skip certificate verification (default: false)")
+)
 
-func (s *JSQL) Select(arg *string, reply Rowset) error {
+func (s *JSQL) Select(arg *SelectArgs, reply Rowset) error {
 	var (
 		err     error
 		selArgs SelectArgs
@@ -24,21 +31,42 @@ func (s *JSQL) Select(arg *string, reply Rowset) error {
 		return nil //got nil args => return nil reply.
 	}
 
-	log.Println("received:", *arg)
-
-	err = json.Unmarshal([]byte(*arg), &selArgs)
-
-	if err != nil {
-		return nil //TODO: Don't be silent about malformed args...
+	if len(*secret) > 0 && *secret != arg.Auth {
+		return errors.New("incorrect password")
 	}
 
 	reply, err = selArgs.Select()
 
-	return nil
+	return err
 }
 
 func main() {
-	l, err := net.Listen("tcp", "127.0.0.1:"+strconv.Itoa(*port))
+
+	flag.Parse()
+	var (
+		tlsConfig *tls.Config
+		l         net.Listener
+		err       error
+	)
+
+	if len(*certFile) > 0 && len(*keyFile) > 0 {
+		tlsConfig = &tls.Config{
+			InsecureSkipVerify: *skipVerify,
+		}
+
+		tlsConfig.Certificates = make([]tls.Certificate, 1)
+		tlsConfig.Certificates[0], err = tls.LoadX509KeyPair(*certFile, *keyFile)
+
+		if err != nil {
+			log.Fatal("Error loading certificate/keyfile: %s", err.Error())
+		}
+
+		l, err = tls.Listen("tcp", "127.0.0.1:"+strconv.Itoa(*port), tlsConfig)
+
+	} else {
+		l, err = net.Listen("tcp", "127.0.0.1:"+strconv.Itoa(*port))
+	}
+
 	defer l.Close()
 
 	if err != nil {
