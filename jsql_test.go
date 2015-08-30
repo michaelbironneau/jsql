@@ -90,6 +90,10 @@ func setUp() {
 
 }
 
+func tearDown() {
+	os.Remove("./test.db")
+}
+
 func TestJSQL(t *testing.T) {
 	setUp()
 	s := new(JSQL)
@@ -126,4 +130,5 @@ func TestJSQL(t *testing.T) {
 			t.Errorf("Output of test %s could not be marshalled to JSON:\n %v", test.Name, reply)
 		}
 	}
+	tearDown()
 }
