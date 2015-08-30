@@ -5,6 +5,7 @@ import (
 	_ "github.com/denisenkom/go-mssqldb"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type SelectArgs struct {
@@ -75,12 +76,11 @@ func getRow(columns []string, row []interface{}) Row {
 	}
 
 	for i := range columns {
-		if b, ok := row[i].(byte); ok {
+		if b, ok := row[i].([]byte); ok {
 			result[columns[i]] = string(b)
 		} else {
-			result[columns[i]] = b
+			result[columns[i]] = row[i]
 		}
 	}
-
 	return result
 }

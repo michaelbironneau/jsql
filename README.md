@@ -7,6 +7,7 @@ Experimental package to expose an SQL database through a JSON-RPC endpoint (for 
 * MS SQL
 * MySQL
 * Postgres
+* SQLite
 
 The only reason I made this is to access MSSQL data from a Cloud Foundry Python app without creating a custom buildpack. In particular, this means I can't install FreeTDS. As I want to use this with the Pandas package without modifying any of my existing code, the return type of the API is a top-level array, so that the `read_json` method will work with it out of the box. 
 
