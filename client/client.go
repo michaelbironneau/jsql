@@ -2,7 +2,7 @@ package client
 
 import (
 	"crypto/tls"
-	"github.com/michaelbironneau/jsql"
+	jsql "github.com/michaelbironneau/jsql/lib"
 	"net"
 	"net/rpc"
 	"net/rpc/jsonrpc"
