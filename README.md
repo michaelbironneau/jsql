@@ -11,7 +11,37 @@ The only reason I made this is to access MSSQL data from a Cloud Foundry Python 
 Use `go get github.com/michaelbironneau/jsql`, followed by `go install`. Then you can run
 
 ```
-jsql --port 1234
+jsql --port 1234 --password scrambled_eggs
+```
+
+You can now use the client:
+
+```go
+
+import (
+	cl "github.com/michaelbironneau/jsql/client"
+	"fmt"
+)
+
+func main() {
+	c := cl.JSQLClient()
+
+	if err := c.Dial("127.0.0.1:1234", "scrambled_eggs"); err != nil {#
+		panic("Failed to dial server!")
+	}
+
+	defer c.Close()
+
+	result, err := c.Query("mssql", "server=localhost;user id=sa", "SELECT 1 AS 'Answer'")
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println("Answer: %v\n", result[0]["Answer"])
+}
+
 ```
 
 #### Authentication
@@ -21,50 +51,6 @@ You can optionally specify a password using the `--password` flag.
 #### TLS
 
 You can optionally specify a server certificate and key file using the `--cert` and `--key` flags.
-
-You now have a j-SQL daemon listening on port 1234:
-
-```go
-
-// client.go
-package main
-
-import (
-	"fmt"
-	"log"
-	"net"
-	"net/rpc/jsonrpc"
-)
-
-type SelectArgs struct {
-	Driver         string        //driver name, eg mssql
-	DataSourceName string        //datasource name (or connection string). see driver documentation
-	Statement      string        // SQL statement (only SELECT is supported for now)
-	Parameters     []interface{} // Any parameters for the query
-}
-
-type Reply []map[string]interface{}
-
-func main() {
-
-	client, err := net.Dial("tcp", "127.0.0.1:1234")
-	if err != nil {
-		log.Fatal("dialing:", err)
-	}
-	// Synchronous call
-	args := &Args{"mssql", "server=localhost;user id=sa", "SELECT 1 as 'Answer'"}
-	var reply Reply
-	c := jsonrpc.NewClient(client)
-	err = c.Call("JSQL.Select", args, &reply)
-	if err != nil {
-		log.Fatal("error:", err)
-	}
-
-	fmt.Printf("Result: %v\n", reply[0]['Answer'])
-}
-
-```
-
 
 **Warning**: You should *never* run this in production without securing it first. At the very least this should include SSL and some authentication. In many environments you will also want to explicitly specify which remote hosts you want to allow access for. You can achieve all of these things by running the app behind Nginx or similar, with the adequate configuration.
 
