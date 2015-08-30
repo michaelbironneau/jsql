@@ -9,7 +9,7 @@ import (
 )
 
 type JSQLClient struct {
-	Addr       string //server address, eg. '127.0.0.1:1234'
+	addr       string //server address, eg. '127.0.0.1:1234'
 	Password   string //password for server
 	TLS        bool   //whether the server uses TLS
 	SkipVerify bool   //whether to skip TLS certificate verification
@@ -17,9 +17,8 @@ type JSQLClient struct {
 	conn       net.Conn
 }
 
-func (j *JSQLClient) Dial(address string, password string) error {
-	j.Addr = address
-	j.Password = password
+func (j *JSQLClient) Dial(address string) error {
+	j.addr = address
 
 	var (
 		tlsConfig *tls.Config
@@ -31,9 +30,9 @@ func (j *JSQLClient) Dial(address string, password string) error {
 		tlsConfig = &tls.Config{
 			InsecureSkipVerify: j.SkipVerify,
 		}
-		conn, err = tls.Dial("tcp", j.Addr, tlsConfig)
+		conn, err = tls.Dial("tcp", j.addr, tlsConfig)
 	} else {
-		conn, err = net.Dial("tcp", j.Addr)
+		conn, err = net.Dial("tcp", j.addr)
 	}
 
 	if err != nil {

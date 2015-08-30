@@ -29,9 +29,9 @@ import (
 )
 
 func main() {
-	c := &cl.JSQLClient{}
+	c := &cl.JSQLClient{Password: "scrambled_eggs"}
 
-	if err := c.Dial("127.0.0.1:1234", "scrambled_eggs"); err != nil {
+	if err := c.Dial("127.0.0.1:1234"); err != nil {
 		panic("Failed to dial server!")
 	}
 
