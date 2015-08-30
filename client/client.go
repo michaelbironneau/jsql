@@ -23,22 +23,21 @@ func (j *Client) Dial(address string) error {
 	var (
 		tlsConfig *tls.Config
 		err       error
-		conn      net.Conn
 	)
 
 	if j.TLS {
 		tlsConfig = &tls.Config{
 			InsecureSkipVerify: j.SkipVerify,
 		}
-		conn, err = tls.Dial("tcp", j.addr, tlsConfig)
+		j.conn, err = tls.Dial("tcp", j.addr, tlsConfig)
 	} else {
-		conn, err = net.Dial("tcp", j.addr)
+		j.conn, err = net.Dial("tcp", j.addr)
 	}
 
 	if err != nil {
 		return err
 	}
-	j.client = jsonrpc.NewClient(conn)
+	j.client = jsonrpc.NewClient(j.conn)
 	return nil
 }
 
