@@ -24,9 +24,9 @@ import (
 )
 
 func main() {
-	c := cl.JSQLClient()
+	c := &cl.JSQLClient{}
 
-	if err := c.Dial("127.0.0.1:1234", "scrambled_eggs"); err != nil {#
+	if err := c.Dial("127.0.0.1:1234", "scrambled_eggs"); err != nil {
 		panic("Failed to dial server!")
 	}
 
@@ -46,13 +46,17 @@ func main() {
 
 #### Authentication
 
-You can optionally specify a password using the `--password` flag. 
+You can optionally specify a password using the `--password` flag.
 
 #### TLS
 
-You can optionally specify a server certificate and key file using the `--cert` and `--key` flags.
+You can optionally specify a server certificate and key file using the `--cert` and `--key` flags. The client should then set `TLS` to true:
 
-**Warning**: You should *never* run this in production without securing it first. At the very least this should include SSL and some authentication. In many environments you will also want to explicitly specify which remote hosts you want to allow access for. You can achieve all of these things by running the app behind Nginx or similar, with the adequate configuration.
+```go
+
+c := &client.JSQLClient{TLS: true}
+```
+
 
 Supports:
 
