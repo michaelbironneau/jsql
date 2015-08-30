@@ -8,7 +8,7 @@ import (
 	"net/rpc/jsonrpc"
 )
 
-type JSQLClient struct {
+type Client struct {
 	addr       string //server address, eg. '127.0.0.1:1234'
 	Password   string //password for server
 	TLS        bool   //whether the server uses TLS
@@ -17,7 +17,7 @@ type JSQLClient struct {
 	conn       net.Conn
 }
 
-func (j *JSQLClient) Dial(address string) error {
+func (j *Client) Dial(address string) error {
 	j.addr = address
 
 	var (
@@ -42,11 +42,11 @@ func (j *JSQLClient) Dial(address string) error {
 	return nil
 }
 
-func (j *JSQLClient) Close() error {
+func (j *Client) Close() error {
 	return j.conn.Close()
 }
 
-func (j *JSQLClient) Query(driver string, dataSourceName string, statement string, params ...interface{}) (jsql.Rowset, error) {
+func (j *Client) Query(driver string, dataSourceName string, statement string, params ...interface{}) (jsql.Rowset, error) {
 	args := &jsql.SelectArgs{
 		Auth:           j.Password,
 		Driver:         driver,

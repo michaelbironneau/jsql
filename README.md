@@ -24,12 +24,12 @@ You can now use the client:
 ```go
 
 import (
-	cl "github.com/michaelbironneau/jsql/client"
+	jsql "github.com/michaelbironneau/jsql/client"
 	"fmt"
 )
 
 func main() {
-	c := &cl.JSQLClient{Password: "scrambled_eggs"}
+	c := &jsql.Client{Password: "scrambled_eggs"}
 
 	if err := c.Dial("127.0.0.1:1234"); err != nil {
 		panic("Failed to dial server!")
