@@ -2,7 +2,11 @@
 
 **License**: MIT
 
-Experimental package to expose an SQL database through a JSON-RPC endpoint (for read-only access at the moment).
+Experimental package to expose an SQL database through a JSON-RPC endpoint (for read-only access at the moment). Supports:
+
+* MS SQL
+* MySQL
+* Postgres
 
 The only reason I made this is to access MSSQL data from a Cloud Foundry Python app without creating a custom buildpack. In particular, this means I can't install FreeTDS. As I want to use this with the Pandas package without modifying any of my existing code, the return type of the API is a top-level array, so that the `read_json` method will work with it out of the box. 
 
@@ -57,12 +61,6 @@ You can optionally specify a server certificate and key file using the `--cert` 
 c := &client.JSQLClient{TLS: true}
 ```
 
-
-Supports:
-
-* MS SQL
-* Postgres
-* MySQL
 
 ## Python Client
 
