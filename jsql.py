@@ -42,7 +42,7 @@ import ssl
 
 class Database(object):
     """Creates a jSQL client to access a SQL database"""
-    def __init__(self, host, port, driver, connection_string, password="", use_ssl=False):
+    def __init__(self, host, port, driver, connection_string, password="", use_ssl=False, timeout=2):
         """
             Initialize the connection to the RPC server.
 
@@ -51,6 +51,7 @@ class Database(object):
         * `connection_string`: Connection string (DataSourceName in the Go code)
         * `password`: Password to access the RPC server (NOT the database user password)
         * `use_ssl`: Whether to use SSL
+        * `timeout`: Receive timeout
 
         """
         self._socket = socket.create_connection((host, port))
@@ -61,6 +62,7 @@ class Database(object):
         self._driver = driver
         self._connection_string = connection_string
         self._id = 1
+        self._timeout = timeout
 
     def sql(self, statement, params=[]):
         """
@@ -81,7 +83,7 @@ class Database(object):
         self._socket.sendall(json.dumps(msg))
         m_id = self._id
         self._id += 1
-        resp = recv_timeout(self._socket)
+        resp = self.recv()
 
         json_resp = json.loads(resp)
 
@@ -98,38 +100,25 @@ class Database(object):
                     params=[inner_request],
                     method="JSQL.Select")
 
+    def recv(self):
+        self._socket.setblocking(0)
+        total_data = []
+        data = ''
+        begin = time.time()
+        while True:
+            if total_data and time.time()-begin > self._timeout:
+                break
+            elif time.time()-begin > self._timeout*2:
+                break
 
-def recv_timeout(the_socket,timeout=2):
-    #make socket non blocking
-    the_socket.setblocking(0)
-     
-    #total data partwise in an array
-    total_data=[];
-    data='';
-     
-    #beginning time
-    begin=time.time()
-    while 1:
-        #if you got some data, then break after timeout
-        if total_data and time.time()-begin > timeout:
-            break
-         
-        #if you got no data at all, wait a little longer, twice the timeout
-        elif time.time()-begin > timeout*2:
-            break
-         
-        #recv something
-        try:
-            data = the_socket.recv(8192)
-            if data:
-                total_data.append(data)
-                #change the beginning time for measurement
-                begin=time.time()
-            else:
-                #sleep for sometime to indicate a gap
-                time.sleep(0.1)
-        except:
-            pass
-     
-    #join all parts to make final string
-    return ''.join(total_data)
+            try:
+                data = self._socket.recv(8192)
+                if data:
+                    total_data.append(data)
+                    begin = time.time()
+                else:
+                    time.sleep(0.1)
+            except:
+                pass
+
+        return ''.join(total_data)
