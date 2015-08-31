@@ -36,13 +36,12 @@ df = DataFrame.from_dict(db.sql("select * from test"))
 
 import json
 import socket
-import time
 import ssl
 
 
 class Database(object):
     """Creates a jSQL client to access a SQL database"""
-    def __init__(self, host, port, driver, connection_string, password="", use_ssl=False, timeout=2):
+    def __init__(self, host, port, driver, connection_string, password="", use_ssl=False):
         """
             Initialize the connection to the RPC server.
 
@@ -51,7 +50,6 @@ class Database(object):
         * `connection_string`: Connection string (DataSourceName in the Go code)
         * `password`: Password to access the RPC server (NOT the database user password)
         * `use_ssl`: Whether to use SSL
-        * `timeout`: Receive timeout
 
         """
         self._socket = socket.create_connection((host, port))
@@ -62,7 +60,6 @@ class Database(object):
         self._driver = driver
         self._connection_string = connection_string
         self._id = 1
-        self._timeout = timeout
 
     def sql(self, statement, params=[]):
         """
@@ -101,24 +98,34 @@ class Database(object):
                     method="JSQL.Select")
 
     def recv(self):
-        self._socket.setblocking(0)
-        total_data = []
-        data = ''
-        begin = time.time()
+        data = self._socket.recv(4096)
+        if end_marker(data):
+            return data
         while True:
-            if total_data and time.time()-begin > self._timeout:
+            d = self._socket.recv(4096)
+            if len(d) == 0:
                 break
-            elif time.time()-begin > self._timeout*2:
+            data += d
+            if end_marker(data):
                 break
+        return data
 
+    def __del__(self):
+        if self._socket:
             try:
-                data = self._socket.recv(8192)
-                if data:
-                    total_data.append(data)
-                    begin = time.time()
-                else:
-                    time.sleep(0.1)
+                self._socket.close()
             except:
                 pass
 
-        return ''.join(total_data)
+
+def end_marker(data):
+    """Go always outputs a line feed at the end of output, and just to be sure
+    we check if '}' is the next to last character as expected. This seems somewhat
+    brittle but it works better in practice than using short timeouts, since some
+    database queries will break that very easily."""
+    if ord(data[-1]) == 10 and data[-2] == '}':
+        return True
+
+if __name__ == "__main__":
+    db = Database('127.0.0.1', 1234, "sqlite3", "./1.db")
+    print(db.sql("select * from test"))
