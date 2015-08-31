@@ -65,4 +65,27 @@ c := &client.JSQLClient{TLS: true}
 
 ## Python Client
 
-TODO. Fow now have a look at https://gist.github.com/stevvooe/1164621.
+See `jsql.py`. Usage examples:
+
+```python
+
+from jsql import Database
+
+db = Database("127.0.0.1", 1234, "sqlite3", "./1.db")
+
+print(db.sql("select 1 as 'Answer'"))  # prints [{"Answer": 1}]
+
+print(db.sql("select * from test"))
+
+```
+
+Importing the data into Pandas:
+
+```python
+from pandas import DataFrame
+from jsql import Database
+
+db = Database("127.0.0.1", 1234, "sqlite3", "./1.db")
+
+df = DataFrame.from_dict(db.sql("select * from test"))
+```
