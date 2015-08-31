@@ -37,11 +37,12 @@ df = DataFrame.from_dict(db.sql("select * from test"))
 import json
 import socket
 import time
+import ssl
 
 
 class Database(object):
     """Creates a jSQL client to access a SQL database"""
-    def __init__(self, host, port, driver, connection_string, password=""):
+    def __init__(self, host, port, driver, connection_string, password="", use_ssl=False):
         """
             Initialize the connection to the RPC server.
 
@@ -49,9 +50,13 @@ class Database(object):
         * `driver`: Name of driver (one of 'mssql', 'mysql', 'pg', or 'sqlite3')
         * `connection_string`: Connection string (DataSourceName in the Go code)
         * `password`: Password to access the RPC server (NOT the database user password)
+        * `use_ssl`: Whether to use SSL
 
         """
         self._socket = socket.create_connection((host, port))
+        if use_ssl:
+            self._socket = ssl.wrap_socket(self._socket)
+
         self._pass = password
         self._driver = driver
         self._connection_string = connection_string
